@@ -46,7 +46,7 @@ mongoose
   });
 
 // Routes
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api", require("./routes/authRoutes"));
 
 // Health check endpoint
 app.get("/health", (req, res) => {

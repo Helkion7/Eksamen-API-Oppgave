@@ -70,61 +70,6 @@ const createUser = async (req, res) => {
   }
 };
 
-const getUserByUsername = async (req, res) => {
-  try {
-    const { username } = req.params;
-
-    // Find user by username
-    const user = await User.findOne({ username });
-
-    if (!user) {
-      return res.status(404).json({
-        error: "User not found",
-      });
-    }
-
-    // Return user without password
-    const userResponse = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-
-    res.status(200).json({
-      message: "User retrieved successfully",
-      user: userResponse,
-    });
-  } catch (error) {
-    console.error("Error retrieving user:", error);
-    res.status(500).json({
-      error: "Internal server error",
-    });
-  }
-};
-
-const getAllUsernames = async (req, res) => {
-  try {
-    // Find all users but only return username field
-    const users = await User.find({}, "username");
-
-    // Extract just the usernames from the user objects
-    const usernames = users.map((user) => user.username);
-
-    res.status(200).json({
-      message: "Usernames retrieved successfully",
-      usernames: usernames,
-      count: usernames.length,
-    });
-  } catch (error) {
-    console.error("Error retrieving usernames:", error);
-    res.status(500).json({
-      error: "Internal server error",
-    });
-  }
-};
-
 module.exports = {
   createUser,
   getUserByUsername,
