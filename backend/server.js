@@ -1,27 +1,45 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
-const dotenv = require("dotenv");
-
-// Load environment variables
-dotenv.config();
+const cors = require("cors");
+const helmet = require("helmet");
+const authRoutes = require("./routes/authRoutes");
+require("dotenv").config();
 
 // Create Express app function
 const createServer = () => {
   const app = express();
 
-  // Middleware
+  // Security middleware
+  app.use(helmet());
+
+  // Enable CORS
+  app.use(
+    cors({
+      origin:
+        process.env.NODE_ENV === "production" ? "https://yourdomain.com" : true,
+      credentials: true,
+    })
+  );
+
+  // Parse JSON request body
   app.use(express.json());
+
+  // Parse cookies
   app.use(cookieParser());
 
   // Routes
-  const authRoutes = require("./routes/authRoutes");
   app.use("/api", authRoutes);
 
-  // Error handling middleware
+  // 404 handler
+  app.use((req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
+
+  // Error handler
   app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Internal server error" });
   });
 
   return app;

@@ -11,18 +11,35 @@ const {
   validateUserLogin,
   validateUserUpdate,
 } = require("../middleware/validation");
+const { apiLimiter, loginLimiter } = require("../middleware/rateLimit");
 
 // Public routes
-router.post("/users", validateUserRegistration, authController.createUser);
-router.post("/login", validateUserLogin, authController.loginUser);
+router.post(
+  "/users",
+  apiLimiter,
+  validateUserRegistration,
+  authController.createUser
+);
+router.post(
+  "/login",
+  loginLimiter,
+  validateUserLogin,
+  authController.loginUser
+);
 
 // Protected routes
-router.get("/users", authenticate, authController.getAllUsers);
-router.get("/users/:username", authenticate, authController.getUserByUsername);
+router.get("/users", authenticate, apiLimiter, authController.getAllUsers);
+router.get(
+  "/users/:username",
+  authenticate,
+  apiLimiter,
+  authController.getUserByUsername
+);
 router.put(
   "/users/:username",
   authenticate,
   isAdminOrSameUser,
+  apiLimiter,
   validateUserUpdate,
   authController.updateUser
 );
@@ -30,6 +47,7 @@ router.delete(
   "/users/:username",
   authenticate,
   isAdmin,
+  apiLimiter,
   authController.deleteUser
 );
 
