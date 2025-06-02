@@ -1,82 +1,74 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const helmet = require("helmet");
 const cors = require("cors");
-const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
+// Import routes
+const authRoutes = require("./routes/authRoutes");
+
+// Create Express app
 const app = express();
-const PORT = process.env.PORT;
 
 // Security middleware
 app.use(helmet());
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? "your-frontend-domain.com"
-        : "http://localhost:3000",
-    credentials: true,
-  })
-);
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again later.",
+  max: 100, // Limit each IP to 100 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
 });
+
+// Apply rate limiting to all requests
 app.use(limiter);
 
-// Body parsing middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+// Middlewares
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL
+        : "http://localhost:5173",
+    credentials: true,
+  })
+);
+app.use(express.json());
 app.use(cookieParser());
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
-  });
-
 // Routes
-app.use("/api", require("./routes/authRoutes"));
+app.use("/api", authRoutes);
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-  });
-});
-
-// 404 handler
-app.use("*", (req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
-// Global error handler
-app.use((error, req, res, next) => {
-  console.error(error.stack);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
   res.status(500).json({
-    error:
-      process.env.NODE_ENV === "production"
-        ? "Something went wrong!"
-        : error.message,
+    error: "Something went wrong!",
+    ...(process.env.NODE_ENV === "development" && { details: err.message }),
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-});
+// Connect to MongoDB
+if (process.env.NODE_ENV !== "test") {
+  mongoose
+    .connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log("Connected to MongoDB");
 
+      // Start server
+      const PORT = process.env.PORT || 3000;
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error("MongoDB connection error:", err);
+      process.exit(1);
+    });
+}
+
+// Export app for testing
 module.exports = app;
