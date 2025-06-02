@@ -6,20 +6,7 @@ const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Validation
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        error: "Username, email, and password are required",
-      });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({
-        error: "Password must be at least 6 characters long",
-      });
-    }
-
-    // Check if user already exists
+    // Check if user already exists - moved from validation to business logic
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
@@ -74,13 +61,6 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    // Validate input
-    if (!username || !password) {
-      return res.status(400).json({
-        error: "Username and password are required",
-      });
-    }
 
     // Find user by username
     const user = await User.findOne({ username });
@@ -175,39 +155,17 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // Check if the requesting user is the same as the target user or is an admin
-    const isOwnAccount = req.user.username === username;
-    const isAdmin = req.user.role === "admin";
-
-    if (!isOwnAccount && !isAdmin) {
-      return res.status(403).json({
-        error: "You do not have permission to update this user",
-      });
-    }
-
     // Prepare update data
     const updateData = {};
     if (email) updateData.email = email;
 
     // Only admins can update role
-    if (role && isAdmin) {
-      if (["user", "admin"].includes(role)) {
-        updateData.role = role;
-      } else {
-        return res.status(400).json({
-          error: "Invalid role provided",
-        });
-      }
+    if (role && req.user.role === "admin") {
+      updateData.role = role;
     }
 
     // Handle password update
     if (password) {
-      if (password.length < 6) {
-        return res.status(400).json({
-          error: "Password must be at least 6 characters long",
-        });
-      }
-
       updateData.password = await argon2.hash(password, {
         type: argon2.argon2id,
         memoryCost: parseInt(process.env.ARGON2_MEMORY_COST) || 2 ** 16,

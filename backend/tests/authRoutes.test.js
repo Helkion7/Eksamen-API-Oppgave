@@ -19,13 +19,7 @@ beforeAll(async () => {
   await dbHandler.connect();
 
   // Create the Express app
-  app = express();
-  app.use(express.json());
-  app.use(cookieParser());
-
-  // Create routes
-  const authRoutes = require("../routes/authRoutes");
-  app.use("/api", authRoutes);
+  app = createServer(); // Using the app creator function now
 
   server = app.listen(0); // Listen on a random port
 });
@@ -95,6 +89,8 @@ describe("User Registration - POST /api/users", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toContain("password");
+    expect(res.body.error).toContain("required");
   });
 
   test("Should reject registration with short password", async () => {
@@ -106,6 +102,30 @@ describe("User Registration - POST /api/users", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toContain("password");
+    expect(res.body.error).toContain("at least 6");
+  });
+
+  test("Should trim whitespace from username", async () => {
+    const res = await request(app).post("/api/users").send({
+      username: "  newuser  ", // Extra whitespace
+      email: "new@test.com",
+      password: "password123",
+    });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.user.username).toBe("newuser"); // Should be trimmed
+  });
+
+  test("Should convert email to lowercase", async () => {
+    const res = await request(app).post("/api/users").send({
+      username: "newuser",
+      email: "NEW@TEST.COM", // Uppercase email
+      password: "password123",
+    });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.user.email).toBe("new@test.com"); // Should be lowercase
   });
 
   test("Should reject registration with duplicate username", async () => {
@@ -172,6 +192,8 @@ describe("User Login - POST /api/login", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toContain("password");
+    expect(res.body.error).toContain("required");
   });
 });
 
@@ -296,6 +318,46 @@ describe("Update User - PUT /api/users/:username", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toContain("password");
+    expect(res.body.error).toContain("at least 6");
+  });
+
+  test("Should validate email format on update", async () => {
+    const res = await request(app)
+      .put("/api/users/testuser")
+      .set("Cookie", userCookie)
+      .send({
+        email: "not-an-email", // Invalid email format
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toContain("email");
+  });
+
+  test("Should convert email to lowercase on update", async () => {
+    const res = await request(app)
+      .put("/api/users/testuser")
+      .set("Cookie", userCookie)
+      .send({
+        email: "UPDATED@TEST.COM", // Uppercase email
+      });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.user.email).toBe("updated@test.com"); // Should be lowercase
+  });
+
+  test("Should validate role values on update", async () => {
+    const res = await request(app)
+      .put("/api/users/testuser")
+      .set("Cookie", adminCookie)
+      .send({
+        role: "superuser", // Invalid role
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty("error");
+    expect(res.body.error).toContain("role");
   });
 });
 

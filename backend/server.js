@@ -1,67 +1,44 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
-require("dotenv").config();
+const dotenv = require("dotenv");
 
-// Import routes
-const authRoutes = require("./routes/authRoutes");
+// Load environment variables
+dotenv.config();
 
-// Create Express app
-const app = express();
+// Create Express app function
+const createServer = () => {
+  const app = express();
 
-// Security middleware
-app.use(helmet());
+  // Middleware
+  app.use(express.json());
+  app.use(cookieParser());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+  // Routes
+  const authRoutes = require("./routes/authRoutes");
+  app.use("/api", authRoutes);
 
-// Apply rate limiting to all requests
-app.use(limiter);
-
-// Middlewares
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL
-        : "http://localhost:5173",
-    credentials: true,
-  })
-);
-app.use(express.json());
-app.use(cookieParser());
-
-// Routes
-app.use("/api", authRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: "Something went wrong!",
-    ...(process.env.NODE_ENV === "development" && { details: err.message }),
+  // Error handling middleware
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: "Server error" });
   });
-});
 
-// Connect to MongoDB
-if (process.env.NODE_ENV !== "test") {
+  return app;
+};
+
+// Connect to database and start server if this file is run directly
+if (require.main === module) {
+  const app = createServer();
+
+  // Connect to MongoDB
   mongoose
     .connect(process.env.MONGODB_URI)
     .then(() => {
       console.log("Connected to MongoDB");
-
-      // Start server
-      const PORT = process.env.PORT || 3000;
-      app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+      const port = process.env.PORT || 3000;
+      app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
       });
     })
     .catch((err) => {
@@ -70,5 +47,4 @@ if (process.env.NODE_ENV !== "test") {
     });
 }
 
-// Export app for testing
-module.exports = app;
+module.exports = createServer;
