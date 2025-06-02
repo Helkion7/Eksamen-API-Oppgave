@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
@@ -31,6 +32,7 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // MongoDB connection
 mongoose
