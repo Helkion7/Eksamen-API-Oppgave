@@ -6,6 +6,7 @@ const schemas = {
     username: Joi.string().required().trim(),
     email: Joi.string().email().required().lowercase(),
     password: Joi.string().min(6).required(),
+    role: Joi.string().valid("user", "admin").optional(), // Add this line
   }),
 
   userLogin: Joi.object({

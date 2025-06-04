@@ -196,6 +196,19 @@ curl -X POST http://localhost:3000/api/users \
   }'
 ```
 
+### Admin User Registration
+
+```bash
+curl -X POST http://localhost:3000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "email": "admin@example.com",
+    "password": "AdminPassword123!",
+    "role": "admin"
+  }'
+```
+
 ### User Login
 
 ```bash
@@ -291,9 +304,23 @@ backend/
 
 ## Development Notes
 
+### Creating Admin Users
+
+Admin users can be created in two ways:
+
+1. **During Registration**: Include `"role": "admin"` in the registration request body
+2. **Database Update**: Manually update an existing user's role in the database
+3. **API Update**: Use the PUT endpoint with an existing admin user to promote another user
+
 ### Postman Testing
 
 Rate limiting is automatically bypassed for requests coming from Postman to facilitate API testing and development. This is detected via the User-Agent header and only affects development/testing workflows.
+
+**For your existing admin user**: You can either:
+
+1. Delete and recreate the user with the role field
+2. Use MongoDB Compass/CLI to update: `db.users.updateOne({username: "admin"}, {$set: {role: "admin"}})`
+3. Create a new admin user and use it to promote the existing user
 
 ## API Response Format
 

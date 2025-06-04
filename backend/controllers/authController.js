@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 
 const createUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
     // Check if user already exists - moved from validation to business logic
     const existingUser = await User.findOne({
@@ -26,11 +26,12 @@ const createUser = async (req, res) => {
       parallelism: 1,
     });
 
-    // Create new user
+    // Create new user with optional role
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
+      role: role || "user", // Use provided role or default to "user"
     });
 
     await newUser.save();
@@ -43,6 +44,7 @@ const createUser = async (req, res) => {
       id: newUser._id,
       username: newUser.username,
       email: newUser.email,
+      role: newUser.role,
       createdAt: newUser.createdAt,
     };
 
