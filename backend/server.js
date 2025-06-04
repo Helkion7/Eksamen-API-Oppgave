@@ -58,7 +58,7 @@ if (require.main === module) {
     .connect(process.env.MONGODB_URI)
     .then(() => {
       console.log("Connected to MongoDB");
-      const port = process.env.PORT || 3000;
+      const port = process.env.PORT;
       app.listen(port, () => {
         console.log(`Server running on port ${port}`);
       });

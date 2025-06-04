@@ -1,11 +1,36 @@
-const { verifyToken } = require("../utils/jwtUtils");
+const {
+  verifyToken,
+  verifyRefreshToken,
+  createAccessTokenFromRefresh,
+} = require("../utils/jwtUtils");
 const User = require("../models/User");
 
 // Middleware to verify if user is authenticated
 const protect = async (req, res, next) => {
   try {
-    // Get token from cookie
-    const token = req.cookies.jwt;
+    let token = req.cookies.jwt;
+    const refreshToken = req.cookies.refreshToken;
+
+    // If no access token, try to refresh
+    if (!token && refreshToken) {
+      try {
+        const decoded = verifyRefreshToken(refreshToken);
+        const user = await User.findById(decoded.id).select("-password");
+
+        if (!user) {
+          return res.status(401).json({ error: "User not found" });
+        }
+
+        // Create new access token
+        token = createAccessTokenFromRefresh(res, user._id);
+        req.user = user;
+        return next();
+      } catch (refreshError) {
+        return res
+          .status(401)
+          .json({ error: "Not authorized, invalid refresh token" });
+      }
+    }
 
     if (!token) {
       return res.status(401).json({ error: "Not authorized, no token" });
@@ -15,7 +40,7 @@ const protect = async (req, res, next) => {
     const decoded = verifyToken(token);
 
     // Check if user still exists
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
       return res.status(401).json({ error: "User not found" });
     }
@@ -24,6 +49,27 @@ const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    // If access token is expired, try refresh token
+    if (error.name === "TokenExpiredError" && req.cookies.refreshToken) {
+      try {
+        const decoded = verifyRefreshToken(req.cookies.refreshToken);
+        const user = await User.findById(decoded.id).select("-password");
+
+        if (!user) {
+          return res.status(401).json({ error: "User not found" });
+        }
+
+        // Create new access token
+        createAccessTokenFromRefresh(res, user._id);
+        req.user = user;
+        return next();
+      } catch (refreshError) {
+        return res
+          .status(401)
+          .json({ error: "Not authorized, invalid refresh token" });
+      }
+    }
+
     console.error("Authentication error:", error);
     return res.status(401).json({ error: "Not authorized, token failed" });
   }

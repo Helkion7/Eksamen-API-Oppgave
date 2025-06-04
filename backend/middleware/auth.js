@@ -1,16 +1,41 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const {
+  verifyToken,
+  verifyRefreshToken,
+  createAccessTokenFromRefresh,
+} = require("../utils/jwtUtils");
 
 // Authentication middleware
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies.jwt;
+    let token = req.cookies.jwt;
+    const refreshToken = req.cookies.refreshToken;
+
+    // If no access token, try to refresh
+    if (!token && refreshToken) {
+      try {
+        const decoded = verifyRefreshToken(refreshToken);
+        const user = await User.findById(decoded.id).select("-password");
+
+        if (!user) {
+          return res.status(401).json({ error: "User not found" });
+        }
+
+        // Create new access token
+        token = createAccessTokenFromRefresh(res, user._id);
+        req.user = user;
+        return next();
+      } catch (refreshError) {
+        return res.status(401).json({ error: "Invalid refresh token" });
+      }
+    }
 
     if (!token) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyToken(token);
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -20,6 +45,25 @@ const authenticate = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    // If access token is expired, try refresh token
+    if (error.name === "TokenExpiredError" && req.cookies.refreshToken) {
+      try {
+        const decoded = verifyRefreshToken(req.cookies.refreshToken);
+        const user = await User.findById(decoded.id).select("-password");
+
+        if (!user) {
+          return res.status(401).json({ error: "User not found" });
+        }
+
+        // Create new access token
+        createAccessTokenFromRefresh(res, user._id);
+        req.user = user;
+        return next();
+      } catch (refreshError) {
+        return res.status(401).json({ error: "Invalid refresh token" });
+      }
+    }
+
     console.error("Authentication error:", error);
     res.status(401).json({ error: "Invalid authentication token" });
   }

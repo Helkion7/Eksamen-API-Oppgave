@@ -169,9 +169,9 @@ const updateUser = async (req, res) => {
     if (password) {
       updateData.password = await argon2.hash(password, {
         type: argon2.argon2id,
-        memoryCost: parseInt(process.env.ARGON2_MEMORY_COST) || 2 ** 16,
-        timeCost: parseInt(process.env.ARGON2_TIME_COST) || 3,
-        parallelism: parseInt(process.env.ARGON2_PARALLELISM) || 1,
+        memoryCost: parseInt(process.env.ARGON2_MEMORY_COST),
+        timeCost: parseInt(process.env.ARGON2_TIME_COST),
+        parallelism: parseInt(process.env.ARGON2_PARALLELISM),
       });
     }
 

@@ -10,8 +10,8 @@ const bypassRateLimit = (req, res, next) => next();
 const apiLimiter = isTestEnvironment
   ? bypassRateLimit
   : rateLimit({
-      windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes by default
-      max: process.env.RATE_LIMIT_MAX_REQUESTS || 100, // limit each IP to 100 requests per windowMs
+      windowMs: process.env.RATE_LIMIT_WINDOW_MS, // 15 minutes by default
+      max: process.env.RATE_LIMIT_MAX_REQUESTS, // limit each IP to 100 requests per windowMs
       standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
       legacyHeaders: false, // Disable the `X-RateLimit-*` headers
       message: { error: "Too many requests, please try again later" },
@@ -21,8 +21,8 @@ const apiLimiter = isTestEnvironment
 const loginLimiter = isTestEnvironment
   ? bypassRateLimit
   : rateLimit({
-      windowMs: process.env.LOGIN_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
-      max: process.env.LOGIN_RATE_LIMIT_MAX_REQUESTS || 5, // limit each IP to 5 login attempts per window
+      windowMs: process.env.LOGIN_RATE_LIMIT_WINDOW_MS, // 15 minutes
+      max: process.env.LOGIN_RATE_LIMIT_MAX_REQUESTS, // limit each IP to 5 login attempts per window
       standardHeaders: true,
       legacyHeaders: false,
       message: { error: "Too many login attempts, please try again later" },

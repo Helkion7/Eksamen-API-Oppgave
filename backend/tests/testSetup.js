@@ -44,9 +44,19 @@ async function createTestUsers(app) {
     password: "password123",
   });
 
+  // Extract both access and refresh tokens
+  const adminCookies = adminRes.headers["set-cookie"];
+  const userCookies = userRes.headers["set-cookie"];
+
   return {
-    adminCookie: adminRes.headers["set-cookie"][0],
-    userCookie: userRes.headers["set-cookie"][0],
+    adminCookie: adminCookies.find((cookie) => cookie.startsWith("jwt=")),
+    adminRefreshCookie: adminCookies.find((cookie) =>
+      cookie.startsWith("refreshToken=")
+    ),
+    userCookie: userCookies.find((cookie) => cookie.startsWith("jwt=")),
+    userRefreshCookie: userCookies.find((cookie) =>
+      cookie.startsWith("refreshToken=")
+    ),
   };
 }
 
