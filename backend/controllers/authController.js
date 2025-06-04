@@ -1,6 +1,7 @@
 const argon2 = require("argon2");
 const User = require("../models/User");
 const { createTokenCookie } = require("../utils/jwtUtils");
+const mongoose = require("mongoose");
 
 const createUser = async (req, res) => {
   try {
@@ -233,6 +234,31 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Health check endpoint
+const healthCheck = async (req, res) => {
+  try {
+    // Check database connection
+    const dbStatus =
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+
+    res.status(200).json({
+      status: "OK",
+      timestamp: new Date().toISOString(),
+      database: dbStatus,
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.version,
+    });
+  } catch (error) {
+    console.error("Health check error:", error);
+    res.status(500).json({
+      status: "ERROR",
+      timestamp: new Date().toISOString(),
+      error: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
@@ -240,4 +266,5 @@ module.exports = {
   getUserByUsername,
   updateUser,
   deleteUser,
+  healthCheck,
 };

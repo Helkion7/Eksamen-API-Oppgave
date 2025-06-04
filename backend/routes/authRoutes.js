@@ -13,6 +13,9 @@ const {
 } = require("../middleware/validation");
 const { apiLimiter, loginLimiter } = require("../middleware/rateLimit");
 
+// Health check route (public)
+router.get("/health", authController.healthCheck);
+
 // Public routes
 router.post(
   "/users",
