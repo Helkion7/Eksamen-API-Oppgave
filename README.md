@@ -166,44 +166,11 @@ Controller → Mongoose Model → MongoDB
    npm install
    ```
 
-3. **Environment Configuration**
-
-   Create a `.env` file in the backend directory with the following variables:
-
-   ```env
-   # Server Configuration
-   PORT=3000
-   NODE_ENV=development
-
-   # Database
-   MONGODB_URI=mongodb://localhost:27017/eksamen_db
-
-   # JWT Configuration
-   JWT_SECRET=your-super-secret-jwt-key
-   JWT_EXPIRES_IN=15m
-   JWT_REFRESH_SECRET=your-super-secret-refresh-key
-   JWT_REFRESH_EXPIRES_IN=7d
-   JWT_COOKIE_EXPIRES_IN=0.25
-   JWT_REFRESH_COOKIE_EXPIRES_IN=7
-
-   # Password Hashing (Argon2)
-   ARGON2_MEMORY_COST=65536
-   ARGON2_TIME_COST=3
-   ARGON2_PARALLELISM=1
-
-   # Security
-   CSRF_SECRET=your-csrf-secret
-   RATE_LIMIT_WINDOW_MS=900000
-   RATE_LIMIT_MAX_REQUESTS=100
-   LOGIN_RATE_LIMIT_WINDOW_MS=900000
-   LOGIN_RATE_LIMIT_MAX_REQUESTS=5
-   ```
-
-4. **Start MongoDB**
+3. **Start MongoDB**
 
    Make sure MongoDB is running on your system or configure a cloud database URL.
 
-5. **Run the application**
+4. **Run the application**
 
    ```bash
    # Development mode with auto-restart
