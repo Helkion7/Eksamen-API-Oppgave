@@ -201,6 +201,7 @@ curl -X POST http://localhost:3000/api/users \
 ```bash
 curl -X POST http://localhost:3000/api/login \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{
     "username": "johndoe",
     "password": "SecurePassword123!"
@@ -211,14 +212,14 @@ curl -X POST http://localhost:3000/api/login \
 
 ```bash
 curl -X GET http://localhost:3000/api/users \
-  -H "Cookie: jwt=your-jwt-token"
+  -b cookies.txt
 ```
 
 ### Get Specific User
 
 ```bash
 curl -X GET http://localhost:3000/api/users/johndoe \
-  -H "Cookie: jwt=your-jwt-token"
+  -b cookies.txt
 ```
 
 ### Update User
@@ -226,7 +227,7 @@ curl -X GET http://localhost:3000/api/users/johndoe \
 ```bash
 curl -X PUT http://localhost:3000/api/users/johndoe \
   -H "Content-Type: application/json" \
-  -H "Cookie: jwt=your-jwt-token" \
+  -b cookies.txt \
   -d '{
     "email": "newemail@example.com"
   }'
@@ -236,7 +237,7 @@ curl -X PUT http://localhost:3000/api/users/johndoe \
 
 ```bash
 curl -X DELETE http://localhost:3000/api/users/johndoe \
-  -H "Cookie: jwt=your-admin-jwt-token"
+  -b cookies.txt
 ```
 
 ## Testing
@@ -282,11 +283,17 @@ backend/
 - **Password Security**: Argon2 hashing algorithm
 - **JWT Authentication**: Access and refresh token implementation
 - **HTTP-Only Cookies**: Secure token storage
-- **Rate Limiting**: Protection against brute force attacks
+- **Rate Limiting**: Protection against brute force attacks (bypassed for Postman in development)
 - **Input Validation**: Joi schema validation
 - **CORS Configuration**: Cross-origin request handling
 - **Helmet**: Security headers middleware
 - **Role-Based Access**: User and Admin permissions
+
+## Development Notes
+
+### Postman Testing
+
+Rate limiting is automatically bypassed for requests coming from Postman to facilitate API testing and development. This is detected via the User-Agent header and only affects development/testing workflows.
 
 ## API Response Format
 
