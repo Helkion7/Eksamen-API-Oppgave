@@ -51,7 +51,6 @@ const createUser = async (req, res) => {
       user: userResponse,
     });
   } catch (error) {
-    console.error("Error creating user:", error);
     res.status(500).json({
       error: "Internal server error",
     });
@@ -95,7 +94,6 @@ const loginUser = async (req, res) => {
       user: userResponse,
     });
   } catch (error) {
-    console.error("Login error:", error);
     res.status(500).json({
       error: "Internal server error",
     });
@@ -112,7 +110,6 @@ const getAllUsers = async (req, res) => {
       users,
     });
   } catch (error) {
-    console.error("Error fetching users:", error);
     res.status(500).json({
       error: "Internal server error",
     });
@@ -134,7 +131,6 @@ const getUserByUsername = async (req, res) => {
 
     res.status(200).json({ user });
   } catch (error) {
-    console.error("Error fetching user:", error);
     res.status(500).json({
       error: "Internal server error",
     });
@@ -185,7 +181,6 @@ const updateUser = async (req, res) => {
       user: updatedUser,
     });
   } catch (error) {
-    console.error("Error updating user:", error);
     res.status(500).json({
       error: "Internal server error",
     });
@@ -227,7 +222,6 @@ const deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting user:", error);
     res.status(500).json({
       error: "Internal server error",
     });
@@ -250,7 +244,6 @@ const healthCheck = async (req, res) => {
       version: process.version,
     });
   } catch (error) {
-    console.error("Health check error:", error);
     res.status(500).json({
       status: "ERROR",
       timestamp: new Date().toISOString(),

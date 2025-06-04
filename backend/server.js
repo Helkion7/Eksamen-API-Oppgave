@@ -42,7 +42,6 @@ const createServer = () => {
 
   // Error handler
   app.use((err, req, res, next) => {
-    console.error(err.stack);
     res.status(500).json({ error: "Internal server error" });
   });
 
@@ -57,7 +56,6 @@ if (require.main === module) {
   mongoose
     .connect(process.env.MONGODB_URI)
     .then(() => {
-      console.log("Connected to MongoDB");
       const port = process.env.PORT;
       app.listen(port, () => {
         console.log(`Server running on port ${port}`);

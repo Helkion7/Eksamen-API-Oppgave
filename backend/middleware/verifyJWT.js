@@ -70,7 +70,6 @@ const protect = async (req, res, next) => {
       }
     }
 
-    console.error("Authentication error:", error);
     return res.status(401).json({ error: "Not authorized, token failed" });
   }
 };
